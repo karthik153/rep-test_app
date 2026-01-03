@@ -41,5 +41,5 @@ spec:
     app: my-ace-app          # Links networking to the Deployment above
   ports:
     - protocol: TCP
-      port: 8081             # Windows Port (The port you want to type in browser)
+      port: 8080             # Windows Port (The port you want to type in browser)
       targetPort: 7800       # Container Port (The internal ACE port)
