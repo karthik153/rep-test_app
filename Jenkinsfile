@@ -5,11 +5,8 @@ pipeline {
         ACE_BASE_IMAGE = 'ace:13.0.6.0'
         TAG = "v${BUILD_NUMBER}"
         KUBECONFIG = '/var/jenkins_home/kube_config'
-    }
-
-    parameters {
-        string(name: 'APP_NAME', defaultValue: 'test-app', description: 'Name of the Microservice')
-        string(name: 'HTTP_PORT', defaultValue: '8081', description: 'External Port')
+        // Define your GitHub User/Org here to make it easy to change later
+        GITHUB_BASE = 'https://github.com/karthik153'
     }
 
     stages {
@@ -18,55 +15,52 @@ pipeline {
                 cleanWs()
             }
         }
-        stage('Checkout Code') {
+        
+        stage('Checkout Target Application') {
             steps {
-                checkout scm
+                script {
+                    // CONSTRUCT THE URL DYNAMICALLY
+                    def fullUrl = "${GITHUB_BASE}/${params.REPO_NAME}.git"
+                    
+                    echo "--- Cloning Repo: ${fullUrl} ---"
+                    
+                    // Pull code using the constructed URL
+                    // Note: If you need credentials, add credentialsId: 'your-id' inside the brackets
+                    git branch: 'main', url: fullUrl
+                }
             }
         }
+
         stage('Compile BAR') {
             steps {
                 script {
-                    echo "--- Compiling BAR (Using Docker Copy Method) ---"
-                    
-                    // 1. Start a temporary background container (keeping it alive with 'tail')
-                    // We capture the Container ID into a variable 'CID'
+                    echo "--- Compiling BAR ---"
                     def CID = sh(script: "docker run -d -e LICENSE=accept --user 0 --entrypoint tail ${ACE_BASE_IMAGE} -f /dev/null", returnStdout: true).trim()
-                    
                     try {
-                        echo "Builder Container ID: ${CID}"
-
-                        // 2. Create the temp directory inside
                         sh "docker exec ${CID} mkdir -p /tmp/workspace/src"
-
-                        // 3. COPY your 'src' folder from Jenkins into the ACE Container
                         sh "docker cp src/. ${CID}:/tmp/workspace/src"
-
-                        // 4. Run 'ibmint package' inside the container
+                        
                         sh """
                             docker exec ${CID} bash -c "source /opt/ibm/ace-13/server/bin/mqsiprofile && ibmint package --input-path /tmp/workspace/src --output-bar-file /tmp/workspace/${params.APP_NAME}.bar --do-not-compile-java"
                         """
-
-                        // 5. COPY the resulting BAR file back to Jenkins
                         sh "docker cp ${CID}:/tmp/workspace/${params.APP_NAME}.bar ./"
-
                     } finally {
-                        // 6. Always clean up (remove the temp container)
                         sh "docker rm -f ${CID}"
                     }
-                    
-                    // Debug: Verify we have the BAR file
                     sh "ls -l *.bar"
                 }
             }
         }
-        stage('Build Runtime Image') {
+
+        stage('Build Image') {
             steps {
                  script {
-                    echo "--- Building Docker Image ---"
+                    echo "--- Building Image ---"
                     sh "docker build -t ${params.APP_NAME}:${TAG} --build-arg BAR_NAME=${params.APP_NAME}.bar --build-arg SERVER_NAME=${params.APP_NAME} ."
                 }
             }
         }
+
         stage('Deploy to Kubernetes') {
             steps {
                 script {
