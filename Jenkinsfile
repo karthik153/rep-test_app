@@ -28,9 +28,9 @@ pipeline {
             steps {
                 script {
                    echo "--- Compiling BAR ---"
-                   // NOTE: We assume your folder is named 'src'. If it is 'test_app', update the path below!
                    sh """
                        docker run --rm \
+                       -e LICENSE=accept \
                        --user 0 \
                        -v \$(pwd):/tmp/workspace \
                        --entrypoint bash \
