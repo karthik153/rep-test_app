@@ -1,0 +1,12 @@
+---
+serverConf: 1
+    
+# 1. Logging Configuration (Enable Debug logs if needed)
+Resource:
+  Manager:
+    consoleLogLevel: 'info'   # Options: debug, info, warn, error
+
+# 2. JVM Heap settings (Critical for Microservices!)
+  #JVM:
+    jvmMinHeapSize: 64M
+    jvmMaxHeapSize: 256M
