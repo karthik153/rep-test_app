@@ -1,0 +1,45 @@
+# -------------------
+# Part 1: The Deployment (The Application)
+# -------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-ace-app           # Name of this deployment object
+spec:
+  replicas: 1                # Run 1 copy of the container
+  selector:
+    matchLabels:
+      app: my-ace-app
+  template:
+    metadata:
+      labels:
+        app: my-ace-app
+    spec:
+      containers:
+      - name: ace-container
+        image: test-runtime:v1       # YOUR LOCAL IMAGE NAME
+        imagePullPolicy: Never       # CRITICAL: Tells K8s "Don't check Internet, look locally"
+        ports:
+        - containerPort: 7800
+        env:
+        - name: LICENSE
+          value: "accept"            # Essential for ACE to start
+        - name: ACE_SERVER_NAME
+          value: "MyK8sRuntime"
+
+---
+# -------------------
+# Part 2: The Service (The Networking)
+# -------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-ace-service       # Name of the network endpoint
+spec:
+  type: LoadBalancer         # Exposes the service to localhost (on Docker Desktop)
+  selector:
+    app: my-ace-app          # Links networking to the Deployment above
+  ports:
+    - protocol: TCP
+      port: 8081             # Windows Port (The port you want to type in browser)
+      targetPort: 7800       # Container Port (The internal ACE port)
