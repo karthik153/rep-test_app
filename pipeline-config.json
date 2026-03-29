@@ -1,0 +1,8 @@
+{
+  "appName": "TestApp",
+  "requiresDbParms": false,
+  "dependencies": {
+    "mq": false,
+    "redis": false
+  }
+}
