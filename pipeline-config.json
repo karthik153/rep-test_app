@@ -1,5 +1,5 @@
 {
-  "appName": "TestApp",
+  "appName": "test_app",
   "requiresDbParms": false,
   "dependencies": {
     "mq": false,
