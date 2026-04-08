@@ -1,9 +1,8 @@
 @Library('cicd-shared-library') _
 
-// All logic is hidden inside this function
 acev13Pipeline(
-    appName: 'test_app',
-    aceProjectName: 'testapp',
+    appName: 'test-app',
+    aceProjectName: 'test_app',  // Make sure this matches your folder name
     hostPort: '7801',
     adminPort: '9481'
 )
